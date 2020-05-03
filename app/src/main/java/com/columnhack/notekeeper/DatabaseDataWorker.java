@@ -4,7 +4,7 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
 /**
- * Created by Jim.
+ * Created by Evi.
  */
 
 public class DatabaseDataWorker {

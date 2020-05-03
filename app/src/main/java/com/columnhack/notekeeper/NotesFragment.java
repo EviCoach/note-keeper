@@ -6,8 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,12 +18,17 @@ public class NotesFragment extends Fragment {
 
     private NoteRecyclerAdapter mNoteRecyclerAdapter;
     private View mView;
+    private NoteKeeperOpenHelper mDbOpenHelper;
 
-
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mDbOpenHelper = new NoteKeeperOpenHelper(getActivity());
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                              Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_notes, container, false);
         FloatingActionButton fab = mView.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -45,7 +48,14 @@ public class NotesFragment extends Fragment {
         mNoteRecyclerAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    public void onDestroy() {
+        mDbOpenHelper.close();
+        super.onDestroy();
+    }
+
     public void initializeDisplayContent(){
+        DataManager.loadFromDatabase(mDbOpenHelper);
         RecyclerView recyclerNotes = (RecyclerView) mView.findViewById(R.id.list_items);
         LinearLayoutManager notesLayoutManager = new LinearLayoutManager(getActivity());
         recyclerNotes.setLayoutManager(notesLayoutManager);
