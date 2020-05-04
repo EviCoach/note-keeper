@@ -2,6 +2,7 @@ package com.columnhack.notekeeper;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +12,43 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import static com.columnhack.notekeeper.NoteKeeperDatabaseContract.*;
+
 public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapter.ViewHolder> {
 
     private final Context mContext;
-    private final List<NoteInfo> mNotes;
+    private Cursor mCursor;
     private final LayoutInflater mLayoutInflater;
+    private int mCoursePos;
+    private int mNoteTitlePos;
+    private int mIdPos;
 
-    public NoteRecyclerAdapter(Context context, List<NoteInfo> notes) {
+    public NoteRecyclerAdapter(Context context, Cursor cursor) {
         mContext = context;
-        mNotes = notes;
+        mCursor = cursor;
         mLayoutInflater = LayoutInflater.from(mContext);
+        // Get the positions of the columns we are interested in
+        populateColumnPositions();
+    }
+
+    private void populateColumnPositions() {
+        // We can initialize the adapter even when we don't have the cursor yet
+        if(mCursor == null)
+            return;
+        // Get column indexes from mCursor
+        mCoursePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        mNoteTitlePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
+        mIdPos = mCursor.getColumnIndex(NoteInfoEntry._ID);
+    }
+
+    public void changeCursor(Cursor cursor){
+        // Check and close any existing cursor
+        if(mCursor != null)
+            mCursor.close();
+        mCursor = cursor;
+        populateColumnPositions();
+        notifyDataSetChanged();
+
     }
 
     @Override
@@ -31,16 +59,26 @@ public class NoteRecyclerAdapter extends RecyclerView.Adapter<NoteRecyclerAdapte
     }
 
     @Override
+    // The purpose of this method is to
+    // display the data at each specific position
     public void onBindViewHolder(ViewHolder holder, int position) {
-        NoteInfo note = mNotes.get(position);
-        holder.mTextCourse.setText(note.getCourse().getTitle());
-        holder.mTextTitle.setText(note.getTitle());
-        holder.mId = note.getId();
+        // first, move our cursor to the correct row
+        mCursor.moveToPosition(position);
+        // Now get the values
+        String course = mCursor.getString(mCoursePos);
+        String noteTitle = mCursor.getString(mNoteTitlePos);
+        int id = mCursor.getInt(mIdPos);
+
+        holder.mTextCourse.setText(course);
+        holder.mTextTitle.setText(noteTitle);
+        holder.mId = id;
     }
 
     @Override
     public int getItemCount() {
-        return mNotes.size();
+        // Check if the cursor is null, if so return return zero
+        // else return the number of rows in the cursor
+        return mCursor == null ? 0 : mCursor.getCount();
     }
 
     // use the viewholder paremater to hold information for each individual views

@@ -1,6 +1,8 @@
 package com.columnhack.notekeeper;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
+
+import static com.columnhack.notekeeper.NoteKeeperDatabaseContract.*;
 
 public class NotesFragment extends Fragment {
 
@@ -45,7 +49,25 @@ public class NotesFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mNoteRecyclerAdapter.notifyDataSetChanged();
+        // Get the latest set of data
+        // out of the database
+        loadNotes();
+    }
+
+    private void loadNotes() {
+        // Query the database
+        // to get back the list of notes
+        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
+        String[] noteColumns = {
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry._ID
+        };
+
+        String noteOrderBy = NoteInfoEntry.COLUMN_COURSE_ID + ", " + NoteInfoEntry.COLUMN_NOTE_TITLE;
+        final Cursor noteCursor = db.query(NoteInfoEntry.TABLE_NAME, noteColumns,
+                null, null, null, null, noteOrderBy);
+        mNoteRecyclerAdapter.changeCursor(noteCursor);
     }
 
     @Override
@@ -60,8 +82,7 @@ public class NotesFragment extends Fragment {
         LinearLayoutManager notesLayoutManager = new LinearLayoutManager(getActivity());
         recyclerNotes.setLayoutManager(notesLayoutManager);
 
-        List<NoteInfo> notes = DataManager.getInstance().getNotes();
-        mNoteRecyclerAdapter = new NoteRecyclerAdapter(getActivity(), notes);
+        mNoteRecyclerAdapter = new NoteRecyclerAdapter(getActivity(), null);
         recyclerNotes.setAdapter(mNoteRecyclerAdapter);
     } // ends initializeDisplayContent
 }
