@@ -46,4 +46,5 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="pref_title_email_address">Email Address</string>
+    <string name="set_reminder">Set Reminder</string>
 </resources>

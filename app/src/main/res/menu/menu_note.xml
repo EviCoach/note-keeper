@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.columnhack.notekeeper.NoteActivity">
     <item
+        android:id="@+id/set_reminder"
+        android:title="@string/set_reminder" />
+    <item
         android:id="@+id/action_cancel"
         android:icon="@android:drawable/ic_menu_revert"
         android:title="@android:string/cancel"
