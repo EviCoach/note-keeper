@@ -59,7 +59,7 @@ public class NotesFragment extends Fragment
         super.onResume();
         // Get the latest set of data
         // out of the database
-        initializeDisplayContent(); // WAS NOT ORINALLY HERE
+        initializeDisplayContent(); // WAS NOT ORIGINALLY HERE
         LoaderManager.getInstance(this).restartLoader(LOADER_NOTES, null, this);
     }
 

@@ -266,7 +266,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
@@ -277,6 +279,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import static com.columnhack.notekeeper.NoteKeeperDatabaseContract.*;
 import static com.columnhack.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
@@ -506,15 +510,71 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void createNewNote() {
+        AsyncTask<ContentValues, Integer, Uri> task =
+                new AsyncTask<ContentValues, Integer, Uri>() {
+                private ProgressBar mProgressBar;
+                    // onPreExecute runs on the main thread
+                    @Override
+                    protected void onPreExecute() {
+                        mProgressBar = findViewById(R.id.progress_bar);
+                        mProgressBar.setVisibility(View.VISIBLE);
+                        mProgressBar.setProgress(1);
+                    }
+
+                    @Override
+                    protected Uri doInBackground(ContentValues... contentValues) {
+                        Log.d(TAG, "Call to doInBackground - thread " +
+                                Thread.currentThread().getId());
+                        // ...contentValues is an array, to access a single value
+                        ContentValues insertValues = contentValues[0];
+                        Uri rowUri = getContentResolver().insert(Notes.CONTENT_URI, insertValues);
+
+                        simulateLongRunningWork(); // simulate slow database work
+                        publishProgress(2); // calls onProgressUpdate with the given value
+
+                        simulateLongRunningWork(); // simulate slow work with data
+                        publishProgress(3); // calls onProgressUpdate with the given value
+                        return rowUri;
+                    }
+
+                    @Override
+                    protected void onProgressUpdate(Integer... values) {
+                        int progressValue = values[0]; // values sub-zero
+                        mProgressBar.setProgress(progressValue);
+                    }
+
+                    private void simulateLongRunningWork() {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    protected void onPostExecute(Uri uri) {
+                        Log.d(TAG, "Call to onPostExecute - thread " + Thread.currentThread().getId());
+                        // This method receives what was returned from doInBackground method
+                        mNoteUri = uri;
+                        displaySnackbar(mNoteUri.toString());
+                        mProgressBar.setVisibility(View.GONE);
+                    }
+                };
+
+
         ContentValues values = new ContentValues();
         values.put(Notes.COLUMN_COURSE_ID, "");
         values.put(Notes.COLUMN_NOTE_TITLE, "");
         values.put(Notes.COLUMN_NOTE_TEXT, "");
 
-        mNoteUri = getContentResolver().insert(Notes.CONTENT_URI, values);
+        Log.d(TAG, "Call to execute - thread " + Thread.currentThread().getId());
+        task.execute(values); // Execution of async task starts here.
+    }
 
-//        SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
-//        mNoteId = (int) db.insert(NoteInfoEntry.TABLE_NAME, null, values);
+    private void displaySnackbar(String value) {
+        Snackbar snackbar = Snackbar
+                .make(mSpinnerCourses, value, Snackbar.LENGTH_LONG);
+        snackbar.show();
     }
 
     @Override

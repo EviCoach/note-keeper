@@ -3,4 +3,10 @@
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings">
     </item>
+    <item
+        android:id="@+id/action_upload_notes"
+        android:title="@string/upload_notes" />
+    <item android:id="@+id/action_backup_notes"
+        android:title="@string/backup_notes">
+    </item>
 </menu>

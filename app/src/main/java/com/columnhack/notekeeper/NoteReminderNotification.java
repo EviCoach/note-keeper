@@ -16,28 +16,11 @@ import androidx.core.app.NotificationCompat;
 public class NoteReminderNotification {
 
 
-
-
-        /**
-         * The unique identifier for this type of notification.
-         */
+    /**
+     * The unique identifier for this type of notification.
+     */
     private static final String NOTIFICATION_TAG = "NoteReminder";
 
-    /**
-     * Shows the notification, or updates a previously shown notification of
-     * this type, with the given parameters.
-     * <p>
-     * TODO: Customize this method's arguments to present relevant content in
-     * the notification.
-     * <p>
-     * TODO: Customize the contents of this method to tweak the behavior and
-     * presentation of note reminder notifications. Make
-     * sure to follow the
-     * <a href="https://developer.android.com/design/patterns/notifications.html">
-     * Notification design guidelines</a> when doing so.
-     *
-     * @see #cancel(Context)
-     */
     public static void notify(final Context context,
                               final String noteTitle, final String noteText, int noteId) {
 
@@ -46,7 +29,7 @@ public class NoteReminderNotification {
         String NOTIFICATION_CHANNEL_ID = "my_channel_id_01";
         NotificationChannel notificationChannel =
                 new NotificationChannel(NOTIFICATION_CHANNEL_ID,
-                "My Notifications", NotificationManager.IMPORTANCE_HIGH);
+                        "My Notifications", NotificationManager.IMPORTANCE_HIGH);
 
         // Configure the notification channel.
         notificationChannel.setDescription("Channel description");
@@ -59,72 +42,83 @@ public class NoteReminderNotification {
         final Resources res = context.getResources();
 
         // This image is used as the notification's large icon (thumbnail).
-        // TODO: Remove this if your notification has no relevant thumbnail.
+        // Remove this if your notification has no relevant thumbnail.
         final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.logo);
 
         Intent noteActivityIntent = new Intent(context, NoteActivity.class);
         noteActivityIntent.putExtra(NoteActivity.NOTE_ID, noteId);
 
+        Intent backupServiceIntent = new Intent(context, NoteBackupService.class);
+        backupServiceIntent.putExtra(NoteBackupService.EXTRA_COURSE_ID, NoteBackup.ALL_COURSES);
+
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
 
-                // Set appropriate defaults for the notification light, sound,
-                // and vibration.
-                .setDefaults(Notification.DEFAULT_ALL)
+                        // Set appropriate defaults for the notification light, sound,
+                        // and vibration.
+                        .setDefaults(Notification.DEFAULT_ALL)
 
-                // Set required fields, including the small icon, the
-                // notification title, and text.
-                .setSmallIcon(R.drawable.ic_stat_note_reminder)
-                .setContentTitle("Review note")
-                .setContentText(noteText)
+                        // Set required fields, including the small icon, the
+                        // notification title, and text.
+                        .setSmallIcon(R.drawable.ic_stat_note_reminder)
+                        .setContentTitle("Review note")
+                        .setContentText(noteText)
 
-                // All fields below this line are optional.
+                        // All fields below this line are optional.
 
-                // Use a default priority (recognized on devices running Android
-                // 4.1 or later)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        // Use a default priority (recognized on devices running Android
+                        // 4.1 or later)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
 
-                // Provide a large icon, shown with the notification in the
-                // notification drawer on devices running Android 3.0 or later.
-                .setLargeIcon(picture)
+                        // Provide a large icon, shown with the notification in the
+                        // notification drawer on devices running Android 3.0 or later.
+                        .setLargeIcon(picture)
 
-                // Set ticker text (preview) information for this notification.
-                .setTicker("Review note")
+                        // Set ticker text (preview) information for this notification.
+                        .setTicker("Review note")
 
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(noteText)
-                        .setBigContentTitle(noteTitle)
-                        .setSummaryText("Review note"))
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(noteText)
+                                .setBigContentTitle(noteTitle)
+                                .setSummaryText("Review note"))
 
-                // If this notification relates to a past or upcoming event, you
-                // should set the relevant time information using the setWhen
-                // method below. If this call is omitted, the notification's
-                // timestamp will by set to the time at which it was shown.
-                // TODO: Call setWhen if this notification relates to a past or
-                // upcoming event. The sole argument to this method should be
-                // the notification timestamp in milliseconds.
-                //.setWhen(...)
+                        // If this notification relates to a past or upcoming event, you
+                        // should set the relevant time information using the setWhen
+                        // method below. If this call is omitted, the notification's
+                        // timestamp will by set to the time at which it was shown.
+                        // TODO: Call setWhen if this notification relates to a past or
+                        // upcoming event. The sole argument to this method should be
+                        // the notification timestamp in milliseconds.
+                        //.setWhen(...)
 
-                // Set the pending intent to be initiated when the user touches
-                // the notification.
-                .setContentIntent(
-                        PendingIntent.getActivity(
-                                context,
+                        // Set the pending intent to be initiated when the user touches
+                        // the notification.
+                        .setContentIntent(
+                                PendingIntent.getActivity(
+                                        context,
+                                        0,
+                                        noteActivityIntent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT))
+                        .setAutoCancel(true)
+
+                        .addAction(
                                 0,
-                                noteActivityIntent,
-                                PendingIntent.FLAG_UPDATE_CURRENT))
-
-                .addAction(
-                        0,
-                        "View all notes",
-                        PendingIntent.getActivity(
-                                context,
+                                "View all notes",
+                                PendingIntent.getActivity(
+                                        context,
+                                        0,
+                                        new Intent(context, MainActivity.class),
+                                        PendingIntent.FLAG_UPDATE_CURRENT))
+                        .addAction(
                                 0,
-                                new Intent(context, MainActivity.class),
-                                PendingIntent.FLAG_UPDATE_CURRENT))
+                                "Backup notes",
+                                PendingIntent.getService(
+                                        context,
+                                        0,
+                                        backupServiceIntent,
+                                        PendingIntent.FLAG_UPDATE_CURRENT));
+                        // Automatically dismiss the notification when it is touched.
 
-                // Automatically dismiss the notification when it is touched.
-                .setAutoCancel(true);
 
         notificationManager.notify(1, builder.build());
     }
@@ -155,4 +149,4 @@ public class NoteReminderNotification {
 //        } else {
 //            nm.cancel(NOTIFICATION_TAG.hashCode());
 //        }
-    }
+}
