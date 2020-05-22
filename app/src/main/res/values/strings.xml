@@ -49,4 +49,5 @@
     <string name="set_reminder">Set Reminder</string>
     <string name="backup_notes">Backup notes</string>
     <string name="upload_notes">Upload notes</string>
+    <string name="create_new_note">Create new note</string>
 </resources>

@@ -290,6 +290,7 @@ public class NoteActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final int LOADER_NOTES = 0;
     public static final int LOADER_COURSES = 1;
+    private static final String NOTE_URI = "com.columnhack.notekeeper.NOTE_URI";
     private final String TAG = getClass().getSimpleName();
     public static final String NOTE_ID = "com.jwhh.jim.notekeeper.NOTE_ID";
     public static final String ORIGINAL_NOTE_COURSE_ID = "com.jwhh.jim.notekeeper.ORIGINAL_NOTE_COURSE_ID";
@@ -315,6 +316,7 @@ public class NoteActivity extends AppCompatActivity
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
+    private ModuleStatusView mViewModuleStatus;
 
     @Override
     protected void onDestroy() {
@@ -343,10 +345,12 @@ public class NoteActivity extends AppCompatActivity
         LoaderManager.getInstance(this).initLoader(LOADER_COURSES, null, this);
 
         readDisplayStateValues();
-        if(savedInstanceState == null) {
+        if(savedInstanceState == null) { // new Activity, not recreated
             saveOriginalNoteValues();
-        } else {
+        } else { // Recreated Activity
             restoreOriginalNoteValues(savedInstanceState);
+            String stringNoteUri = savedInstanceState.getString(NOTE_URI);
+            mNoteUri = Uri.parse(stringNoteUri);
         }
 
         mTextNoteTitle = (EditText) findViewById(R.id.text_note_title);
@@ -354,22 +358,21 @@ public class NoteActivity extends AppCompatActivity
 
         if(!mIsNewNote)
             LoaderManager.getInstance(this).initLoader(LOADER_NOTES, null, this);
+
+        mViewModuleStatus = findViewById(R.id.module_status);
+        loadModuleStatusValues();
     }
 
-//    private void loadCourseData() {
-//
-//        mAdapterCourses.changeCursor(cursor);
-//    }
-
-//    private void loadNoteData() {
-//
-//
-//        mCourseIdPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
-//        mNoteTitlePos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
-//        mNoteTextPos = mNoteCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
-//        mNoteCursor.moveToNext();
-//        displayNote();
-//    }
+    private void loadModuleStatusValues() {
+        // In real life we'd lookup the selected course's module statuses from the content provider
+        int totalNumberOfModules = 11;
+        int completedNumberOfModules = 7;
+        boolean[] moduleStatus = new boolean[totalNumberOfModules];
+        for(int moduleIndex = 0; moduleIndex < completedNumberOfModules; moduleIndex++){
+            moduleStatus[moduleIndex] = true;
+        }
+        mViewModuleStatus.setModuleStatus(moduleStatus);
+    }
 
     private void restoreOriginalNoteValues(Bundle savedInstanceState) {
         mOriginalNoteCourseId = savedInstanceState.getString(ORIGINAL_NOTE_COURSE_ID);
@@ -428,6 +431,8 @@ public class NoteActivity extends AppCompatActivity
         outState.putString(ORIGINAL_NOTE_COURSE_ID, mOriginalNoteCourseId);
         outState.putString(ORIGINAL_NOTE_TITLE, mOriginalNoteTitle);
         outState.putString(ORIGINAL_NOTE_TEXT, mOriginalNoteText);
+
+        outState.putString(NOTE_URI, mNoteUri.toString());
     }
 
     private void saveNote() {
@@ -470,6 +475,8 @@ public class NoteActivity extends AppCompatActivity
         
         mTextNoteTitle.setText(noteTitle);
         mTextNoteText.setText(noteText);
+
+        CourseEventBroadcastHelper.sendEventBroadcast(this, courseId, "Editing Note");
     }
 
     private int getIndexOfCourseId(String courseId) {
@@ -556,7 +563,7 @@ public class NoteActivity extends AppCompatActivity
                         Log.d(TAG, "Call to onPostExecute - thread " + Thread.currentThread().getId());
                         // This method receives what was returned from doInBackground method
                         mNoteUri = uri;
-                        displaySnackbar(mNoteUri.toString());
+                        displaySnackBar(mNoteUri.toString());
                         mProgressBar.setVisibility(View.GONE);
                     }
                 };
@@ -571,7 +578,7 @@ public class NoteActivity extends AppCompatActivity
         task.execute(values); // Execution of async task starts here.
     }
 
-    private void displaySnackbar(String value) {
+    private void displaySnackBar(String value) {
         Snackbar snackbar = Snackbar
                 .make(mSpinnerCourses, value, Snackbar.LENGTH_LONG);
         snackbar.show();
